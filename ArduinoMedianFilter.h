@@ -116,10 +116,6 @@ private:
 			}
 		}
 
-		for (S i = 0; i < _ctr; ++i)
-		{
-			std::cerr << int(_buffer[i]) << ",";
-		}
 		_sorted = true;
 	}
 };
