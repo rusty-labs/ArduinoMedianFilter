@@ -93,7 +93,7 @@ private:
 	S _ctr;
 	S _idx;
 	T _buffer[_size];
-	S _counters[_size];
+	S _counters[1024];
 
 	T sort(S start, S end)
 	{
@@ -110,11 +110,16 @@ private:
 		S idx = 0;
 		T sum = 0;
 		S sumCtr = 0;
-		for (S i = 0; i < _size; ++i)
+		for (S i = 0; i < 1024; ++i)
 		{
 			if (_counters[i] == 0)
 			{
 				continue;
+			}
+
+			for (S k = 0; k < _counters[i]; ++k)
+			{
+				std::cerr << int(i) << ",";
 			}
 
 			if (idx >= start && idx <= end)
