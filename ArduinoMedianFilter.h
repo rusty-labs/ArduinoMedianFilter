@@ -25,14 +25,14 @@ SOFTWARE.
 
 
 /*
-Fastest running median filter for arduino.
-Working on assumption that input values are positive integers.
-Sorting algorithm has linear complexity O(2*N)
+Low memory usage sorting algorithm for running median filter.
+Perfect for small arrays.
 */
 
-template <typename T, typename S, S _size> class ArduinoMedianFilter 
+template <typename T, typename S, S _size> class ArduinoMedianFilter
 {
 public:
+
 	ArduinoMedianFilter()
 	{
 		clear();
@@ -42,28 +42,26 @@ public:
 	{
 		_ctr = 0;
 		_idx = 0;
+		_sorted = false;
 	};
 
 	void add(T value)
 	{
 		_buffer[_idx++] = value;
 
-		if (_idx >= _size)
-		{
+		if (_idx >= _size) 
 			_idx = 0;
-		}
 
 		if (_ctr < _size)
-		{
 			++_ctr;
-		}
 	};
 
 	bool getMedian(T& value)
 	{
-		if (_ctr > 0)
+		if (_ctr > 0) 
 		{
-			value = sort((_ctr - 1) / 2, ((_ctr - 1) / 2) + 1);
+			sort();
+			value = _buffer[_ctr / 2];
 			return true;
 		}
 		return false;
@@ -72,17 +70,22 @@ public:
 
 	bool getAverage(S samples, T &value)
 	{
-		if (_ctr > 0 && samples > 0 && samples <= _size)
+		if (_ctr > 0 && samples > 0)
 		{
 			if (_ctr < samples)
-			{
 				samples = _ctr;
-			}
 
 			S start = (_ctr - samples) / 2;
 			S end = start + samples;
-			value = sort(start, end);
 
+			sort();
+
+			T sum = 0;
+			for (S i = start; i < end; ++i)
+			{
+				sum += _buffer[i];
+			}
+			value = sum / samples;
 			return true;
 		}
 		return false;
@@ -93,45 +96,31 @@ private:
 	S _ctr;
 	S _idx;
 	T _buffer[_size];
-	S _counters[1024];
+	bool _sorted;
 
-	T sort(S start, S end)
+	// partial bubble sort
+	void sort()
 	{
-		for (S i = 0; i < _size; ++i)
+		S optCtr = _sorted ? _idx - 1 : _ctr - 1;
+
+		for (S i = 0; i < optCtr; ++i)
 		{
-			_counters[i] = 0;
+			for (S k = 0; k < (_ctr - (i + 1)); ++k)
+			{
+				if (_buffer[k] > _buffer[k + 1])
+				{
+					T t = _buffer[k];
+					_buffer[k] = _buffer[k + 1];
+					_buffer[k + 1] = t;
+				}
+			}
 		}
 
 		for (S i = 0; i < _ctr; ++i)
 		{
-			++_counters[_buffer[i]];
+			std::cerr << int(_buffer[i]) << ",";
 		}
-
-		S idx = 0;
-		T sum = 0;
-		S sumCtr = 0;
-		for (S i = 0; i < 1024; ++i)
-		{
-			if (_counters[i] == 0)
-			{
-				continue;
-			}
-
-			for (S k = 0; k < _counters[i]; ++k)
-			{
-				std::cerr << int(i) << ",";
-			}
-
-			if (idx >= start && idx <= end)
-			{
-				sum += i*_counters[i];
-				sumCtr += _counters[i];
-			}
-
-			idx += _counters[i];
-		}
-
-		return sum / sumCtr;
+		_sorted = true;
 	}
 };
 
