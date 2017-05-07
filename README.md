@@ -1,4 +1,3 @@
 # ArduinoMedianFilter
-Fast running media filter for arduino, ESP8266, AVR
-O(2*N) complexity
-Works only for positive integers.
+Low memory usage, running media filter for arduino, ESP8266, AVR, attiny
+Perfect for small arrays
