@@ -25,99 +25,87 @@
 
 
 /*
-  Low memory usage sorting algorithm for running median filter.
-  Perfect for small arrays.
+  High performance and low memory usage sorting algorithm for running median filter.
 */
 
-template <typename T, typename S, S _size> class ArduinoMedianFilter
+template <typename T, unsigned int _size> 
+class ArduinoMedianFilter
 {
   public:
-
     ArduinoMedianFilter()
     {
-      clear();
     };
 
-    void clear()
+    void set(unsigned int idx, T value)
     {
-      _ctr = 0;
-      _idx = 0;
-      _sorted = false;
-    };
-
-    void add(T value)
-    {
-      _buffer[_idx++] = value;
-
-      if (_idx >= _size)
-        _idx = 0;
-
-      if (_ctr < _size)
-        ++_ctr;
+      _buffer[idx] = value;
     };
 
     bool getMedian(T& value)
     {
-      if (_ctr > 0)
-      {
-        sort();
-        value = _buffer[_ctr / 2];
-        return true;
-      }
-      return false;
+      sort();
+      value = _buffer[_size / 2];
+      return true;
     };
 
 
-    bool getAverage(S samples, T &value)
+    bool getAverage(unsigned int samples, T &value)
     {
-      if (_ctr > 0 && samples > 0)
+      if (samples > 0)
       {
-        if (_ctr < samples)
-          samples = _ctr;
+        if (_size < samples)
+          samples = _size;
 
-        S start = (_ctr - samples) / 2;
-        S end = start + samples;
+        unsigned int start = (_size - samples) / 2;
+        unsigned int end = start + samples;
 
         sort();
 
         T sum = 0;
-        for (S i = start; i < end; ++i)
+        for (unsigned int i = start; i < end; ++i)
         {
           sum += _buffer[i];
         }
         value = sum / samples;
+        
         return true;
       }
+
       return false;
     }
 
 
   private:
-    S _ctr;
-    S _idx;
     T _buffer[_size];
-    bool _sorted;
 
-    // partial bubble sort
     void sort()
     {
-      S optCtr = _sorted ? _idx - 1 : _ctr - 1;
+      unsigned int gap = _size;
+      unsigned int swapped = true;
 
-      for (S i = 0; i < optCtr; ++i)
+      while (gap > 1 || swapped == true)
       {
-        for (S k = 0; k < (_ctr - (i + 1)); ++k)
+        gap = (gap * 10) / 13;
+
+        if (gap < 1)
+          gap = 1;
+
+        swapped = false;
+
+        for (unsigned int i = 0; i < _size - gap; ++i)
         {
-          if (_buffer[k] > _buffer[k + 1])
+          if (_buffer[i] > _buffer[i + gap])
           {
-            T t = _buffer[k];
-            _buffer[k] = _buffer[k + 1];
-            _buffer[k + 1] = t;
+            T tmp = _buffer[i];
+            _buffer[i] = _buffer[i + gap];
+            _buffer[i + gap] = tmp;
+            swapped = true;
           }
         }
       }
-
-      _sorted = true;
     }
+
+
 };
 
 #endif
